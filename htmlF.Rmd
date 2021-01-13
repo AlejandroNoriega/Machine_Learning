@@ -1,0 +1,128 @@
+---
+title: "Proyect2"
+author: "AlejandroN"
+date: "12/1/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Background
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways.
+
+Six young health participants were asked to perform one set of 10 repetitions of the Unilateral Dumbbell Biceps Curl in five different fashions: exactly according to the specification (Class A), throwing the elbows to the front (Class B), lifting the dumbbell only halfway (Class C), lowering the dumbbell only halfway (Class D) and throwing the hips to the front (Class E).
+
+Class A corresponds to the specified execution of the exercise, while the other 4 classes correspond to common mistakes. Participants were supervised by an experienced weight lifter to make sure the execution complied to the manner they were supposed to simulate. The exercises were performed by six male participants aged between 20-28 years, with little weight lifting experience. We made sure that all participants could easily simulate the mistakes in a safe and controlled manner by using a relatively light dumbbell (1.25kg).
+
+## Data
+
+The training data for this project are available here:
+
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv
+
+The test data are available here:
+
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
+
+The data for this project come from this source: http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har. If you use the document you create for this class for any purpose please cite them as they have been very generous in allowing their data to be used for this kind of assignment.
+
+## Procedure 
+First we import the libraries we will be using during these analysis 
+```{r}
+library(ggplot2); library(caret);library(randomForest);library(rattle)
+```
+
+
+Using the Training data set provided the first step that I did was to import the DB into R, then I proceeded to delete the columns with mostly NA´S as the weren’t providing any information, after that the next step was to delete columns 1 - 7 as they weren´t providing any useful information either, that left me with a DB of 19622 observations and 53 variables.
+```{r}
+setwd("D:/alexn/Documentos/Curso R/Machine learning/Proyecto")
+trainingset <- read.csv("pml-training.csv", na.strings=c("NA","#DIV/0!", ""))
+testingset <- read.csv("pml-testing.csv", na.strings=c("NA","#DIV/0!", ""))
+
+trainingset<-trainingset[,colSums(is.na(trainingset)) == 0]
+testingset <-testingset[,colSums(is.na(testingset)) == 0]
+
+trainingset   <-trainingset[,-c(1:7)]
+testingset <-testingset[,-c(1:7)]
+```
+
+Once the first part was done the next step was to create the data partition, in this case i decided to give the training set 75% of the DB and the remaining 25% to the test set this with the intention to give as much information as possible to try and get a better model 
+
+```{r}
+train <- createDataPartition(y=trainingset$classe, p=0.75, list=FALSE)
+TrainS <- trainingset[train, ] 
+TestS <- trainingset[-train, ]
+
+```
+
+## Decision Tree 
+The first method I used was the “Decision Tree” , using: 
+```{r}
+modFit<-train(classe~.,method="rpart",data=TrainS)
+
+```
+to make the model, and 
+```{r}
+print(modFit$finalModel)#probabilida de que con las caracteristicas sea de alguna especie
+fancyRpartPlot(modFit$finalModel)
+```
+to make the Diagram.
+
+```{r}
+modFit
+```
+After making this process this were the results, we see that the accuracy of the best model using this method was of 51.64% with the out of sample error being 0.483583 or 48.35% , we then continue to try and predict the values of the “classe” variable on the test data set, and then we make a table comparing the prediction the model made VS the actual classe of the observations.
+```{r}
+pred<-predict(modFit,newdata=TestS)
+TestS$predRight<-pred==TestS$classe
+table(pred,TestS$classe)
+```
+As we see it is not that accurate in predicting the outcome as the multiple errors show.
+
+## Random Forest
+
+We first create the model with 
+```{r}
+modFit2 <- train(classe ~., method = "rf", data = TrainS, 
+                 trControl = trainControl(method = "cv", number = 5), 
+                 prox = TRUE, allowParallel = TRUE)
+```
+which gives us this results
+```{r}
+modFit2
+```
+as we can see the best model has a 99.19% accuracy with the out of sample error of 0.008085 or 0.8085%.
+
+Knowing that the model seems to be pretty accurate we then try to predict the classe of the TestSet , using 
+```{r}
+pred<-predict(modFit2,TestS)
+TestS$predRight<-pred==TestS$classe
+```
+we create the predictions and then create a table comparing the prediction VS the actual classe of the observations
+```{r}
+table(pred,TestS$classe)
+```
+
+As we can see there are a few miss clasifications but in proportion to the ones the model correctly predicted the errors are really small.
+
+## Conclusion
+Comparing these two models the decision seems to be obvious , the RANDOM FOREST model is the one we will use to Find the classe on the TEST data as it is the one with the highest accuracy.
+
+## TEST DATA SET
+Using the TEST data set we will now predict the classe variable using the Random Forest model in order to get the best accuracy possible.
+```{r}
+respuesta<-predict(modFit2,testingset)
+respuesta
+```
+After seeing these result this would be all regarding the project about prediction.
+
+## Reference 
+Velloso, E.; Bulling, A.; Gellersen, H.; Ugulino, W.; Fuks, H. Qualitative Activity Recognition of Weight Lifting Exercises. Proceedings of 4th International Conference in Cooperation with SIGCHI (Augmented Human '13) . Stuttgart, Germany: ACM SIGCHI, 2013.
+
+Read more: http://groupware.les.inf.puc-rio.br/har#ixzz6jP7lnomD
+
+
+
