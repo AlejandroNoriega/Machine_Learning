@@ -471,7 +471,7 @@ TestS &lt;- trainingset[-train, ]</code></pre>
 ## 
 ## Accuracy was used to select the optimal model using the largest value.
 ## The final value used for the model was cp = 0.03389348.</code></pre>
-<p>After making this process this were the results, we see that the accuracy of the best model using this method was of 50% with the out of sample error being 0.5001029 or 50.01% , we then continue to try and predict the values of the “classe” variable on the test data set, and then we make a table comparing the prediction the model made VS the actual classe of the observations.</p>
+<p>After making this process this were the results, we see that the accuracy of the best model using this method was of 51.64% with the out of sample error being 0.483583 or 48.35% , we then continue to try and predict the values of the “classe” variable on the test data set, and then we make a table comparing the prediction the model made VS the actual classe of the observations.</p>
 <pre class="r"><code>pred&lt;-predict(modFit,newdata=TestS)
 TestS$predRight&lt;-pred==TestS$classe
 table(pred,TestS$classe)</code></pre>
@@ -510,7 +510,7 @@ table(pred,TestS$classe)</code></pre>
 ## 
 ## Accuracy was used to select the optimal model using the largest value.
 ## The final value used for the model was mtry = 2.</code></pre>
-<p>as we can see the best model has a 99.15% accuracy with the out of sample error of 0.008493 or 0.8493%.</p>
+<p>as we can see the best model has a 99.19% accuracy with the out of sample error of 0.008085 or 0.8085%.</p>
 <p>Knowing that the model seems to be pretty accurate we then try to predict the classe of the TestSet , using</p>
 <pre class="r"><code>pred&lt;-predict(modFit2,TestS)
 TestS$predRight&lt;-pred==TestS$classe</code></pre>
